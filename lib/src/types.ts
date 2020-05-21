@@ -1,6 +1,6 @@
 import { Account, AuthError, AuthResponse } from "msal";
 import conf from "msal/lib-commonjs/Configuration";
-import { AxiosRequestConfig, AxiosResponse } from "axios";
+import { AxiosRequestConfig, AxiosResponse, Method, ResponseType } from "axios";
 
 export { AuthError, AuthResponse };
 
@@ -10,10 +10,15 @@ export type GraphRequest = AxiosRequestConfig & {
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type GraphResponse<T = any> = AxiosResponse<T> & {};
-export type GraphEndpoints =
-  | string
-  | GraphRequest
-  | Array<string | GraphRequest>;
+export type GraphEndpoint = string | GraphRequest;
+export type GraphRequestConfig = {
+  method?: Method;
+  headers?: { [id: string]: string };
+  params?: { [id: string]: string };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: any;
+  responseType?: ResponseType;
+};
 export type Endpoints = { [id: string]: string };
 
 export type AuthOptions = {
@@ -64,10 +69,11 @@ export interface MSALBasic {
   logout: () => void;
   isAuthenticated: () => boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  query: <T = any>(
-    endpoints: GraphEndpoints,
-    batchUrl?: string
-  ) => Promise<GraphResponse<T>>;
+  query: <Response = any>(
+    endpoint: GraphEndpoint,
+    options: GraphRequestConfig
+  ) => Promise<GraphResponse<Response>>;
+  acquireToken: (request: RequestOptions) => Promise<string | boolean>;
 }
 
 export enum ErrorCode {

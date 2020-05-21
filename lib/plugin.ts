@@ -25,8 +25,11 @@ export default class MSALPlugin {
       isAuthenticated() {
         return msal.isAuthenticated();
       },
-      async query(endpoints, batchUrl) {
-        return await msal.query(endpoints, batchUrl);
+      async query(endpoint, options) {
+        return await msal.query(endpoint, options);
+      },
+      async acquireToken(request) {
+        return await msal.acquireToken(request);
       },
     };
     return exposed;

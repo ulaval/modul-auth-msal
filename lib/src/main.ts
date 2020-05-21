@@ -9,12 +9,13 @@ import {
   Options,
   DataObject,
   MSALBasic,
-  GraphEndpoints,
+  GraphEndpoint,
   GraphRequest,
   GraphResponse,
   ErrorCode,
   AuthError,
   GraphData,
+  GraphRequestConfig,
 } from "./types";
 
 /**
@@ -121,17 +122,50 @@ export class MSAL implements MSALBasic {
   }
 
   /**
-   * TODO: Split query into two different functions. One for a single query and one for a batch query.
    * Allows to query MSGraph API
-   * @param endpoints The API endpoint to query
-   * @param batchUrl The URL to call in case of a batch query
+   * @param endpoint The API endpoint to query
+   * @param options The request options (method, headers, params, data, responseType)
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public async query<T = any>(
-    endpoints: GraphEndpoints,
-    batchUrl?: string
-  ): Promise<GraphResponse<T>> {
-    return await this.executeRequest<T>(endpoints, batchUrl);
+  public async query<Response = any>(
+    endpoint: GraphEndpoint,
+    options: GraphRequestConfig = {
+      method: "GET",
+      responseType: "json",
+    }
+  ): Promise<GraphResponse<Response>> {
+    return await this.executeRequest<Response>(endpoint, options);
+  }
+
+  /**
+   * Allow to fetch the cached token or acquire a new one.
+   * Note: returns false in case of error.
+   * @param request The authentication parameters used to fetch the token
+   */
+  public async acquireToken(request = this.request): Promise<string | boolean> {
+    try {
+      // Use acquireTokenSilent to obtain the signed in user's token from cache.
+      const response = await this.lib.acquireTokenSilent(request);
+
+      // Check that its not the same token as the one currently set (or the cached one).
+      if (this.data.accessToken !== response.accessToken) {
+        this.setAccessToken(
+          response.accessToken,
+          response.expiresOn,
+          response.scopes
+        );
+      }
+
+      return response.accessToken;
+    } catch (error) {
+      // Upon acquireTokenSilent failure (due to consent, interaction or login required ONLY)
+      // Call acquireTokenRedirect
+      if (this.requiresInteraction((error as AuthError).errorCode)) {
+        this.lib.acquireTokenRedirect(request);
+      }
+
+      return false;
+    }
   }
 
   /**
@@ -167,7 +201,10 @@ export class MSAL implements MSALBasic {
       }
 
       const promises = requests.map(async (endpoint) => {
-        return { id: endpoint.id as string, value: await this.query(endpoint) };
+        return {
+          id: endpoint.id as string,
+          value: await this.query(endpoint),
+        };
       });
 
       await Promise.all(promises).then((responses) => {
@@ -186,39 +223,6 @@ export class MSAL implements MSALBasic {
         `msal.msgraph-${this.data.accessToken}`,
         JSON.stringify({ ...results })
       );
-    }
-  }
-
-  /**
-   * Allow to fetch the cached token or acquire a new one.
-   * Note: returns false in case of error.
-   * @param request The authentication parameters used to fetch the token
-   */
-  private async acquireToken(
-    request = this.request
-  ): Promise<string | boolean> {
-    try {
-      // Use acquireTokenSilent to obtain the signed in user's token from cache.
-      const response = await this.lib.acquireTokenSilent(request);
-
-      // Check that its not the same token as the one currently set (or the cached one).
-      if (this.data.accessToken !== response.accessToken) {
-        this.setAccessToken(
-          response.accessToken,
-          response.expiresOn,
-          response.scopes
-        );
-      }
-
-      return response.accessToken;
-    } catch (error) {
-      // Upon acquireTokenSilent failure (due to consent, interaction or login required ONLY)
-      // Call acquireTokenRedirect
-      if (this.requiresInteraction((error as AuthError).errorCode)) {
-        this.lib.acquireTokenRedirect(request);
-      }
-
-      return false;
     }
   }
 
@@ -278,56 +282,35 @@ export class MSAL implements MSALBasic {
   /**
    * Execute a request and return its response
    * @param endpoint The API endpoint to query
-   * @param batchUrl The URL to call in case of a batch query
+   * @param options The request options (method, headers, params, data, responseType)
    */
-  private async executeRequest<T>(
-    endpoints: GraphEndpoints,
-    batchUrl?: string
-  ): Promise<GraphResponse<T>> {
-    if (!Array.isArray(endpoints)) {
-      endpoints = [endpoints];
+  private async executeRequest<Response>(
+    endpoint: GraphEndpoint,
+    options: GraphRequestConfig
+  ): Promise<GraphResponse<Response>> {
+    const request = this.createRequest(endpoint, options);
+
+    // If the request URL is only a path (e.g. /api/blabla), append the graph base URL to it.
+    if (request.url.search("http") !== 0 && this.graph.baseUrl !== undefined) {
+      request.url = `${this.graph.baseUrl}${request.url}`;
     }
-
-    const requests = endpoints.map((endpoint, index) =>
-      this.createRequest(endpoint, index)
-    );
-
-    let request: GraphRequest = {
-      url: `${batchUrl}/$batch`,
-      method: "POST",
-      data: { requests: requests },
-      headers: { Authorization: `Bearer ${this.data.accessToken}` },
-      responseType: "json",
+    request.headers = {
+      ...request.headers,
+      Authorization: `Bearer ${this.data.accessToken}`,
     };
 
-    // If the current request is not a batch request
-    if (batchUrl === undefined) {
-      request = requests[0];
-
-      // If the request URL is only a path (e.g. /api/blabla), append the graph base URL to it.
-      if (
-        request.url.search("http") !== 0 &&
-        this.graph.baseUrl !== undefined
-      ) {
-        request.url = `${this.graph.baseUrl}${request.url}`;
-      }
-
-      request.responseType = "json";
-      request.headers = { Authorization: `Bearer ${this.data.accessToken}` };
-    }
-
-    // TODO: Maybe format the response depending on the request type (batch/single)
-    // Batch responses should maybe be formatted like {profile: [resp for /profile], test: [..], ...}
-    return await axios.request<T>(request);
+    return await axios.request<Response>(request);
   }
 
   /**
    * Create a graph request object
    * @param endpoint The API endpoint to query
+   * @param options The request options (method, headers, params, data, responseType)
    * @param index The request index (in case of batch request)
    */
   private createRequest(
     endpoint: string | GraphRequest,
+    options: GraphRequestConfig,
     index = 0
   ): GraphRequest {
     if (typeof endpoint === "string") {
@@ -338,8 +321,8 @@ export class MSAL implements MSALBasic {
     }
 
     const request: GraphRequest = {
+      ...options,
       url: endpoint.url,
-      method: "GET", // TODO: Allow to make different types of request
       id: endpoint.id || `defaultID-${index}`,
     };
 
