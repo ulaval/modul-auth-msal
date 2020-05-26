@@ -1,4 +1,4 @@
-import _ from "lodash";
+import { cloneDeep, includes } from "lodash";
 import axios from "axios";
 import { UserAgentApplicationExtended } from "./UserAgentApplicationExtended";
 import {
@@ -73,7 +73,7 @@ export class MSAL implements MSALBasic {
         navigateToLoginRequestUrl: this.auth.navigateToLoginRequestUrl,
       },
       cache: this.cache,
-      system: _.cloneDeep(options.system),
+      system: cloneDeep(options.system),
     });
 
     if (this.auth.requireAuthOnInitialize) {
@@ -192,7 +192,7 @@ export class MSAL implements MSALBasic {
 
       // Only keep requests that have not already been made and cached
       for (const id in endpoints) {
-        if (!_.includes(storedIds, id)) {
+        if (!includes(storedIds, id)) {
           requests.push({
             id: id,
             url: endpoints[id],
@@ -218,7 +218,7 @@ export class MSAL implements MSALBasic {
       });
 
       // Append new results to the cached ones and save them into the store.
-      this.data.graph = _.cloneDeep(results);
+      this.data.graph = cloneDeep(results);
       this.lib.store.setItem(
         `msal.msgraph-${this.data.accessToken}`,
         JSON.stringify({ ...results })
