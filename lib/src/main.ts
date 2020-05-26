@@ -23,7 +23,7 @@ import {
  */
 export class MSAL implements MSALBasic {
   private lib: UserAgentApplicationExtended;
-  private tokenExpirationTimer?: number = undefined;
+  private tokenExpirationTimer?: number;
   private readonly auth: AuthOptions = {
     clientId: "",
     tenantId: "common",
