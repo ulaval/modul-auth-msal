@@ -42,16 +42,12 @@ export type GraphOptions = {
 export type RequestOptions = {
   scopes?: string[];
 };
-export type FrameworkOptions = {
-  globalMixin?: boolean;
-};
 export type Options = {
   auth: AuthOptions;
   request?: RequestOptions;
   graph?: GraphOptions;
   cache?: CacheOptions;
   system?: SystemOptions;
-  framework?: FrameworkOptions;
 };
 
 export type UserData = Account;
