@@ -2,20 +2,19 @@ import { cloneDeep, includes } from "lodash";
 import axios from "axios";
 import { UserAgentApplicationExtended } from "./UserAgentApplicationExtended";
 import {
-  AuthOptions,
-  RequestOptions,
-  GraphOptions,
-  CacheOptions,
-  Options,
+  AuthConfig,
+  CacheConfig,
+  QueryConfig,
+  Config,
   DataObject,
   MSALBasic,
-  GraphEndpoint,
-  GraphRequest,
-  GraphResponse,
+  Query,
+  QueryEndpoint,
+  QueryResponse,
+  QueryData,
+  QueryOptions,
   ErrorCode,
   AuthError,
-  GraphData,
-  GraphRequestConfig,
 } from "./types";
 
 /**
@@ -24,7 +23,7 @@ import {
 export class MSAL implements MSALBasic {
   private lib: UserAgentApplicationExtended;
   private tokenExpirationTimer?: number;
-  private readonly auth: AuthOptions = {
+  private readonly authConfig: AuthConfig = {
     clientId: "",
     tenantId: "common",
     tenantName: "login.microsoftonline.com",
@@ -35,14 +34,14 @@ export class MSAL implements MSALBasic {
     requireAuthOnInitialize: false,
     autoRefreshToken: true,
   };
-  private readonly cache: CacheOptions = {
+  private readonly cacheConfig: CacheConfig = {
     cacheLocation: "localStorage",
     storeAuthStateInCookie: true,
   };
-  private readonly request: RequestOptions = {
-    scopes: ["user.read"],
-  };
-  private readonly graph: GraphOptions = {
+  private readonly queryConfig: QueryConfig = {
+    parameter: {
+      scopes: ["user.read"],
+    },
     callAfterInit: false,
     endpoints: { profile: "/me" },
     baseUrl: "https://graph.microsoft.com/v1.0",
@@ -53,30 +52,29 @@ export class MSAL implements MSALBasic {
     accessToken: "",
   };
 
-  constructor(private readonly options: Options) {
-    if (!options.auth.clientId) {
+  constructor(private readonly config: Config) {
+    if (!config.auth.clientId) {
       throw new Error("auth.clientId option is required");
     }
 
-    this.auth = Object.assign(this.auth, options.auth);
-    this.cache = Object.assign(this.cache, options.cache);
-    this.request = Object.assign(this.request, options.request);
-    this.graph = Object.assign(this.graph, options.graph);
+    this.authConfig = Object.assign(this.authConfig, config.auth);
+    this.cacheConfig = Object.assign(this.cacheConfig, config.cache);
+    this.queryConfig = Object.assign(this.queryConfig, config.query);
 
     this.lib = new UserAgentApplicationExtended({
       auth: {
-        clientId: this.auth.clientId,
-        authority: `https://${this.auth.tenantName}/${this.auth.tenantId}`,
-        validateAuthority: this.auth.validateAuthority,
-        redirectUri: this.auth.redirectUri,
-        postLogoutRedirectUri: this.auth.postLogoutRedirectUri,
-        navigateToLoginRequestUrl: this.auth.navigateToLoginRequestUrl,
+        clientId: this.authConfig.clientId,
+        authority: `https://${this.authConfig.tenantName}/${this.authConfig.tenantId}`,
+        validateAuthority: this.authConfig.validateAuthority,
+        redirectUri: this.authConfig.redirectUri,
+        postLogoutRedirectUri: this.authConfig.postLogoutRedirectUri,
+        navigateToLoginRequestUrl: this.authConfig.navigateToLoginRequestUrl,
       },
-      cache: this.cache,
-      system: cloneDeep(options.system),
+      cache: this.cacheConfig,
+      system: cloneDeep(config.system),
     });
 
-    if (this.auth.requireAuthOnInitialize) {
+    if (this.authConfig.requireAuthOnInitialize) {
       this.login();
     }
 
@@ -86,8 +84,8 @@ export class MSAL implements MSALBasic {
       this.data.user = this.lib.getAccount();
 
       this.acquireToken().then(() => {
-        if (this.graph.callAfterInit) {
-          this.initialMSGraphCall();
+        if (this.queryConfig.callAfterInit) {
+          this.initialQuery();
         }
       });
     }
@@ -98,7 +96,7 @@ export class MSAL implements MSALBasic {
    */
   public login(): void {
     if (!this.isAuthenticated()) {
-      this.lib.loginRedirect(this.request);
+      this.lib.loginRedirect(this.queryConfig.parameter);
     }
   }
 
@@ -122,30 +120,29 @@ export class MSAL implements MSALBasic {
   }
 
   /**
-   * Allows to query MSGraph API
+   * Allows to query MSQuery API
    * @param endpoint The API endpoint to query
-   * @param options The request options (method, headers, params, data, responseType)
+   * @param options The query options (method, headers, params, data, responseType)
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public async query<Response = any>(
-    endpoint: GraphEndpoint,
-    options: GraphRequestConfig = {
-      method: "GET",
-      responseType: "json",
-    }
-  ): Promise<GraphResponse<Response>> {
-    return await this.executeRequest<Response>(endpoint, options);
+    endpoint: QueryEndpoint,
+    options: QueryOptions
+  ): Promise<QueryResponse<Response>> {
+    return await this.executeQuery<Response>(endpoint, options);
   }
 
   /**
    * Allow to fetch the cached token or acquire a new one.
-   * Note: returns false in case of error.
-   * @param request The authentication parameters used to fetch the token
+   * **Note: returns an empty string in case of error.**
+   * @param queryParameters The authentication parameters used to fetch the token
    */
-  public async acquireToken(request = this.request): Promise<string | boolean> {
+  public async acquireToken(
+    queryParameters = this.queryConfig.parameter
+  ): Promise<string> {
     try {
       // Use acquireTokenSilent to obtain the signed in user's token from cache.
-      const response = await this.lib.acquireTokenSilent(request);
+      const response = await this.lib.acquireTokenSilent(queryParameters);
 
       // Check that its not the same token as the one currently set (or the cached one).
       if (this.data.accessToken !== response.accessToken) {
@@ -161,54 +158,57 @@ export class MSAL implements MSALBasic {
       // Upon acquireTokenSilent failure (due to consent, interaction or login required ONLY)
       // Call acquireTokenRedirect
       if (this.requiresInteraction((error as AuthError).errorCode)) {
-        this.lib.acquireTokenRedirect(request);
+        this.lib.acquireTokenRedirect(queryParameters);
       }
 
-      return false;
+      return "";
     }
   }
 
   /**
-   * Initial MS Graph request on instantiation
+   * Initial MS query on initialisation
    */
-  private async initialMSGraphCall(): Promise<void> {
-    const endpoints = this.graph.endpoints;
+  private async initialQuery(): Promise<void> {
+    const endpoints = this.queryConfig.endpoints;
 
     if (endpoints !== undefined) {
-      const results: GraphData = {};
-      const requests: GraphRequest[] = [];
+      const results: QueryData = {};
+      const queries: Query[] = [];
 
       // Fetch cached results
       let storedIds: string[] = [];
       const storedStringData = this.lib.store.getItem(
-        `msal.msgraph-${this.data.accessToken}`
+        `msal.query-${this.data.accessToken}`
       );
       if (storedStringData) {
-        const storedData: GraphData = JSON.parse(storedStringData);
+        const storedData: QueryData = JSON.parse(storedStringData);
         storedIds = Object.keys(storedData);
 
         Object.assign(results, storedData);
       }
 
-      // Only keep requests that have not already been made and cached
+      // Only keep queries that have not already been made and cached
       for (const id in endpoints) {
         if (!includes(storedIds, id)) {
-          requests.push({
+          queries.push({
             id: id,
             url: endpoints[id],
           });
         }
       }
 
-      const promises = requests.map(async (endpoint) => {
+      const promises = queries.map(async (endpoint) => {
         return {
           id: endpoint.id as string,
-          value: await this.query(endpoint),
+          value: await this.query(endpoint, {
+            method: "GET",
+            responseType: "json",
+          }),
         };
       });
 
       await Promise.all(promises).then((responses) => {
-        const formattedResponses: GraphData = {};
+        const formattedResponses: QueryData = {};
 
         for (const resp of responses) {
           formattedResponses[resp.id] = resp.value.data;
@@ -218,9 +218,9 @@ export class MSAL implements MSALBasic {
       });
 
       // Append new results to the cached ones and save them into the store.
-      this.data.graph = cloneDeep(results);
+      this.data.query = cloneDeep(results);
       this.lib.store.setItem(
-        `msal.msgraph-${this.data.accessToken}`,
+        `msal.query-${this.data.accessToken}`,
         JSON.stringify({ ...results })
       );
     }
@@ -271,7 +271,7 @@ export class MSAL implements MSALBasic {
     // Set a timer for when the token will expire
     this.tokenExpirationTimer = window.setTimeout(() => {
       // Refresh the token once it expires if auto refresh is on.
-      if (this.auth.autoRefreshToken) {
+      if (this.authConfig.autoRefreshToken) {
         this.acquireToken({ scopes });
       } else {
         this.data.accessToken = "";
@@ -280,39 +280,42 @@ export class MSAL implements MSALBasic {
   }
 
   /**
-   * Execute a request and return its response
+   * Execute a query and return its response
    * @param endpoint The API endpoint to query
-   * @param options The request options (method, headers, params, data, responseType)
+   * @param options The query options (method, headers, params, data, responseType)
    */
-  private async executeRequest<Response>(
-    endpoint: GraphEndpoint,
-    options: GraphRequestConfig
-  ): Promise<GraphResponse<Response>> {
-    const request = this.createRequest(endpoint, options);
+  private async executeQuery<Response>(
+    endpoint: QueryEndpoint,
+    options: QueryOptions
+  ): Promise<QueryResponse<Response>> {
+    const query = this.createQuery(endpoint, options);
 
-    // If the request URL is only a path (e.g. /api/blabla), append the graph base URL to it.
-    if (request.url.search("http") !== 0 && this.graph.baseUrl !== undefined) {
-      request.url = `${this.graph.baseUrl}${request.url}`;
+    // If the query URL is only a path (e.g. /api/blabla), append the query base URL to it.
+    if (
+      query.url.search("http") !== 0 &&
+      this.queryConfig.baseUrl !== undefined
+    ) {
+      query.url = `${this.queryConfig.baseUrl}${query.url}`;
     }
-    request.headers = {
-      ...request.headers,
+    query.headers = {
+      ...query.headers,
       Authorization: `Bearer ${this.data.accessToken}`,
     };
 
-    return await axios.request<Response>(request);
+    return await axios.request<Response>(query);
   }
 
   /**
-   * Create a graph request object
+   * Create a query query object
    * @param endpoint The API endpoint to query
-   * @param options The request options (method, headers, params, data, responseType)
-   * @param index The request index (in case of batch request)
+   * @param options The query options (method, headers, params, data, responseType)
+   * @param index The query index (in case of batch query)
    */
-  private createRequest(
-    endpoint: string | GraphRequest,
-    options: GraphRequestConfig,
+  private createQuery(
+    endpoint: string | Query,
+    options: QueryOptions = {},
     index = 0
-  ): GraphRequest {
+  ): Query {
     if (typeof endpoint === "string") {
       endpoint = { url: endpoint };
     }
@@ -320,12 +323,12 @@ export class MSAL implements MSALBasic {
       throw new Error("Empty endpoint url");
     }
 
-    const request: GraphRequest = {
+    const query: Query = {
       ...options,
       url: endpoint.url,
       id: endpoint.id || `defaultID-${index}`,
     };
 
-    return request;
+    return query;
   }
 }

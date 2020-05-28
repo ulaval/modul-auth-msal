@@ -1,17 +1,23 @@
-import { Account, AuthError, AuthResponse } from "msal";
+import {
+  Account,
+  AuthError,
+  AuthResponse,
+  AuthenticationParameters,
+} from "msal";
 import conf from "msal/lib-commonjs/Configuration";
 import { AxiosRequestConfig, AxiosResponse, Method, ResponseType } from "axios";
 
 export { AuthError, AuthResponse };
 
-export type GraphRequest = AxiosRequestConfig & {
+export type Query = AxiosRequestConfig & {
   url: string;
   id?: string;
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type GraphResponse<T = any> = AxiosResponse<T> & {};
-export type GraphEndpoint = string | GraphRequest;
-export type GraphRequestConfig = {
+export type QueryResponse<T = any> = AxiosResponse<T> & {};
+export type QueryEndpoint = string | Query;
+export type QueryParameters = AuthenticationParameters & {};
+export type QueryOptions = {
   method?: Method;
   headers?: { [id: string]: string };
   params?: { [id: string]: string };
@@ -21,7 +27,7 @@ export type GraphRequestConfig = {
 };
 export type Endpoints = { [id: string]: string };
 
-export type AuthOptions = {
+export type AuthConfig = {
   clientId: string;
   tenantId?: string;
   tenantName?: string;
@@ -32,31 +38,28 @@ export type AuthOptions = {
   requireAuthOnInitialize?: boolean;
   autoRefreshToken?: boolean;
 };
-export type CacheOptions = conf.CacheOptions;
-export type SystemOptions = conf.SystemOptions;
-export type GraphOptions = {
+export type CacheConfig = conf.CacheOptions;
+export type SystemConfig = conf.SystemOptions;
+export type QueryConfig = {
+  parameter: QueryParameters;
   callAfterInit?: boolean;
   baseUrl?: string;
   endpoints?: Endpoints;
 };
-export type RequestOptions = {
-  scopes?: string[];
-};
-export type Options = {
-  auth: AuthOptions;
-  request?: RequestOptions;
-  graph?: GraphOptions;
-  cache?: CacheOptions;
-  system?: SystemOptions;
+export type Config = {
+  auth: AuthConfig;
+  query?: QueryConfig;
+  cache?: CacheConfig;
+  system?: SystemConfig;
 };
 
 export type UserData = Account;
-export type GraphData = { [id: string]: unknown };
+export type QueryData = { [id: string]: unknown };
 export type DataObject = {
   isAuthenticated: boolean;
   accessToken: string;
   user?: UserData;
-  graph?: GraphData;
+  query?: QueryData;
 };
 
 export interface MSALBasic {
@@ -66,10 +69,10 @@ export interface MSALBasic {
   isAuthenticated: () => boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   query: <Response = any>(
-    endpoint: GraphEndpoint,
-    options: GraphRequestConfig
-  ) => Promise<GraphResponse<Response>>;
-  acquireToken: (request: RequestOptions) => Promise<string | boolean>;
+    endpoint: QueryEndpoint,
+    options: QueryOptions
+  ) => Promise<QueryResponse<Response>>;
+  acquireToken: (queryParameters: QueryParameters) => Promise<string>;
 }
 
 export enum ErrorCode {

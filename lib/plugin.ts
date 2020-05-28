@@ -1,14 +1,14 @@
-import { Options, MSALBasic } from "./src/types";
+import { Config, MSALBasic } from "./src/types";
 import { MSAL } from "./src/main";
 import { VueConstructor } from "vue";
 
 export default class MSALPlugin {
-  static install(Vue: VueConstructor, options: Options): void {
-    Vue.prototype.$msal = new MSALPlugin(options);
+  static install(Vue: VueConstructor, config: Config): void {
+    Vue.prototype.$msal = new MSALPlugin(config);
   }
 
-  constructor(options: Options) {
-    const msal = new MSAL(options);
+  constructor(config: Config) {
+    const msal = new MSAL(config);
 
     const exposed: MSALBasic = {
       data: msal.data,
@@ -24,12 +24,13 @@ export default class MSALPlugin {
       async query(endpoint, options) {
         return await msal.query(endpoint, options);
       },
-      async acquireToken(request) {
-        return await msal.acquireToken(request);
+      async acquireToken(queryParameters) {
+        return await msal.acquireToken(queryParameters);
       },
     };
+
     return exposed;
   }
 }
 
-export { Options };
+export { Config };
