@@ -39,7 +39,7 @@ export class MSAL implements MSALBasic {
     storeAuthStateInCookie: true,
   };
   private readonly queryConfig: QueryConfig = {
-    parameter: {
+    parameters: {
       scopes: ["user.read"],
     },
     callAfterInit: false,
@@ -96,7 +96,7 @@ export class MSAL implements MSALBasic {
    */
   public login(): void {
     if (!this.isAuthenticated()) {
-      this.lib.loginRedirect(this.queryConfig.parameter);
+      this.lib.loginRedirect(this.queryConfig.parameters);
     }
   }
 
@@ -138,7 +138,7 @@ export class MSAL implements MSALBasic {
    * @param queryParameters The authentication parameters used to fetch the token
    */
   public async acquireToken(
-    queryParameters = this.queryConfig.parameter
+    queryParameters = this.queryConfig.parameters
   ): Promise<string> {
     try {
       // Use acquireTokenSilent to obtain the signed in user's token from cache.

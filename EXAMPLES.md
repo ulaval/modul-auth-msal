@@ -12,7 +12,7 @@ const msalConfig: Config = {
     requireAuthOnInitialize: true,
   },
   query: {
-    parameter: {
+    parameters: {
       scopes: [
         "user.read",
         "https://admin.services.crm.dynamics.com/user_impersonation",

@@ -14,9 +14,9 @@ export type Query = AxiosRequestConfig & {
   id?: string;
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type QueryResponse<T = any> = AxiosResponse<T> & {};
+export type QueryResponse<T = any> = AxiosResponse<T>;
 export type QueryEndpoint = string | Query;
-export type QueryParameters = AuthenticationParameters & {};
+export type QueryParameters = AuthenticationParameters;
 export type QueryOptions = {
   method?: Method;
   headers?: { [id: string]: string };
@@ -41,7 +41,7 @@ export type AuthConfig = {
 export type CacheConfig = conf.CacheOptions;
 export type SystemConfig = conf.SystemOptions;
 export type QueryConfig = {
-  parameter: QueryParameters;
+  parameters: QueryParameters;
   callAfterInit?: boolean;
   baseUrl?: string;
   endpoints?: Endpoints;
