@@ -1,4 +1,4 @@
-import { cloneDeep, includes } from "lodash";
+import { cloneDeep, includes, isEmpty } from "lodash";
 import axios from "axios";
 import { UserAgentApplicationExtended } from "./UserAgentApplicationExtended";
 import {
@@ -115,7 +115,8 @@ export class MSAL implements MSALBasic {
    */
   public isAuthenticated(): boolean {
     return (
-      !this.lib.isCallback(window.location.hash) && !!this.lib.getAccount()
+      !this.lib.isCallback(window.location.hash) &&
+      !isEmpty(this.lib.getAccount())
     );
   }
 
@@ -155,7 +156,7 @@ export class MSAL implements MSALBasic {
 
       return response.accessToken;
     } catch (error) {
-      // Upon acquireTokenSilent failure (due to consent, interaction or login required ONLY)
+      // Upon acquireTokenSilent failure (due to consent, interaction or login required ONLY).
       // Call acquireTokenRedirect
       if (this.requiresInteraction((error as AuthError).errorCode)) {
         this.lib.acquireTokenRedirect(queryParameters);
