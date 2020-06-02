@@ -6,7 +6,7 @@ Small Vuejs wrapper around Microsoft's OAuth lib
 
 1. Install [Git](https://git-scm.com/)
 1. Install [NodeJS Current](https://nodejs.org/)
-1. Install [Yarn](https://yarnpkg.com/getting-started/install)
+1. Install [Yarn 1.X.X](https://classic.yarnpkg.com/en/docs/install)
 1. Clone this project
 1. Run `yarn install`
 
@@ -37,3 +37,9 @@ Builds the plugin for production. All files are put in the 'dist' folder.
 > yarn lint
 
 Runs the linters using ESLint and Prettier.
+
+## TODO
+
+- Fix typos
+- Add/improve examples
+- Add more unit tests

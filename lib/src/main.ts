@@ -84,7 +84,10 @@ export class MSAL implements MSALBasic {
       this.data.user = this.lib.getAccount();
 
       if (this.queryConfig.makeQueryOnInitialize) {
-        if (this.queryConfig.endpoints === undefined) {
+        if (
+          isEmpty(this.queryConfig.endpoints) ||
+          this.queryConfig.endpoints === undefined
+        ) {
           throw new Error(
             "Query endpoints must not be empty when makeQueryOnInitialize is set to true"
           );
@@ -228,7 +231,7 @@ export class MSAL implements MSALBasic {
 
       return this.accessToken;
     } catch (error) {
-      // Upon acquireTokenSilent failure (due to consent, interaction or login required ONLY)
+      // Upon acquireTokenSilent failure (due to consent, interaction or login required ONLY).
       // Call acquireTokenRedirect
       if (this.requiresInteraction((error as AuthError).errorCode)) {
         this.lib.acquireTokenRedirect(queryParameters);
