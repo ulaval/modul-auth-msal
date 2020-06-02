@@ -24,9 +24,6 @@ export default class MSALPlugin {
       async query(endpoint, options) {
         return await msal.query(endpoint, options);
       },
-      async acquireToken(queryParameters) {
-        return await msal.acquireToken(queryParameters);
-      },
     };
 
     return exposed;

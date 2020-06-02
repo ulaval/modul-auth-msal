@@ -42,7 +42,7 @@ export type CacheConfig = conf.CacheOptions;
 export type SystemConfig = conf.SystemOptions;
 export type QueryConfig = {
   parameters: QueryParameters;
-  callAfterInit?: boolean;
+  makeQueryOnInitialize?: boolean;
   baseUrl?: string;
   endpoints?: Endpoints;
 };
@@ -57,9 +57,8 @@ export type UserData = Account;
 export type QueryData = { [id: string]: unknown };
 export type DataObject = {
   isAuthenticated: boolean;
-  accessToken: string;
   user?: UserData;
-  query?: QueryData;
+  query: QueryData;
 };
 
 export interface MSALBasic {
@@ -70,9 +69,9 @@ export interface MSALBasic {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   query: <Response = any>(
     endpoint: QueryEndpoint,
-    options: QueryOptions
+    options: QueryOptions,
+    parameters?: QueryParameters
   ) => Promise<QueryResponse<Response>>;
-  acquireToken: (queryParameters: QueryParameters) => Promise<string>;
 }
 
 export enum ErrorCode {
