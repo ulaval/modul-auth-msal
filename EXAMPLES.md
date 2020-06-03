@@ -13,12 +13,9 @@ const msalConfig: Config = {
   },
   query: {
     parameters: {
-      scopes: [
-        "user.read",
-        "https://admin.services.crm.dynamics.com/user_impersonation",
-      ],
+      scopes: ["user.read"],
     },
-    callAfterInit: true, // Appel de la requête définie plus haut après l'initialisation du plugin
+    makeQueryOnInitialize: true, // Appel de la requête définie plus haut après l'initialisation du plugin
   },
 };
 
@@ -59,15 +56,11 @@ export default class Home extends Vue {
         dti_itemid?: string;
         dti_nom?: string;
     }
-    // Récupère le token avec les accès requis pour envoyer des requêtes vers le CDS
-    await this.$msal.acquireToken({
-      scopes: ["https://ulavalexp.crm.dynamics.com/user_impersonation"],
-    });
 
     // Récupère des items contenus dans une entité (table) du CDS
-    const items = (
+    const response = (
       await this.$msal.query<{ value: Array<Item> }>(
-        "https://ulavalexp.crm.dynamics.com/api/data/v9.1/dti_items",
+        "https://ulavalexp.crm.dynamics.com/api/data/v9.1/items",
         {
           headers: {
             Accept: "application/json",
@@ -78,8 +71,13 @@ export default class Home extends Vue {
           data: {}, // Permet de conserver l'en-tête "Content-Type" (bug contenu dans la lib axios - https://github.com/axios/axios)
           method: "GET",
           responseType: "json",
+        }, {
+          // Query tentera de récupérer un token avec les accès requis pour envoyer des requêtes vers le CDS
+          scopes: ["https://ulavalexp.crm.dynamics.com/user_impersonation"],
         }
       )
     )
+
+    // Il est maintenant possible d'accéder aux items depuis response.value
     ...
 ```
