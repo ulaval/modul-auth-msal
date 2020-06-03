@@ -1,10 +1,19 @@
 jest.mock("msal");
+jest.mock("axios");
 
 import { UserAgentApplication, AuthenticationParameters } from "msal";
+import axios from "axios";
 import { MSAL } from "../src/main";
 import { Config } from "../plugin";
-import { AuthResponse, ErrorCode } from "../src/types";
+import {
+  AuthResponse,
+  ErrorCode,
+  QueryOptions,
+  Query,
+  QueryResponse,
+} from "../src/types";
 import { cloneDeep } from "lodash";
+import { mocked } from "ts-jest/dist/util/testing";
 
 const baseConfig: Config = {
   auth: {
@@ -20,6 +29,7 @@ const baseConfig: Config = {
     baseUrl: "https://graph.microsoft.com/v1.0",
   },
 };
+// Allows to edit the config object since its a clone of baseConfig and is reset before each test
 let config = cloneDeep(baseConfig);
 // Since msal module is mocked, it is preferable to create a copy
 // of the AuthError class defined by msal
@@ -58,18 +68,29 @@ const defaultUserAgentApplicationMock = {
   // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
   acquireTokenRedirect: (_: AuthenticationParameters): void => {},
 };
+const defaultAxiosResponse: QueryResponse = {
+  data: { test: 123 },
+  status: 200,
+  statusText: "OK",
+  config: {},
+  headers: {},
+};
 
 beforeEach(() => {
+  // Mock the implementation of MSAL's UserAgentApplication class
   (UserAgentApplication as jest.Mock).mockImplementation(
     () => defaultUserAgentApplicationMock
   );
+  // Mock axios request implementation to resolve a mocked response
+  mocked(axios.request).mockResolvedValue(defaultAxiosResponse);
 
+  // Reset the MSAL config object with the baseConfig
   config = cloneDeep(baseConfig);
 });
 
 describe(MSAL.name, () => {
   describe("initialization", () => {
-    it("should not throw any error with basic configurations", () => {
+    it("should not throw any error with basic config", () => {
       try {
         new MSAL(config);
       } catch (e) {
@@ -77,7 +98,7 @@ describe(MSAL.name, () => {
       }
     });
 
-    it("should call login when auth.requireAuthOnInitialize is true", () => {
+    it("should call login when auth.requireAuthOnInitialize is set to true", () => {
       config.auth.requireAuthOnInitialize = true;
       const spy = jest.spyOn(MSAL.prototype, "login");
 
@@ -93,10 +114,11 @@ describe(MSAL.name, () => {
       new MSAL(config);
 
       // We just want to make sure it has been called at least once
+      // since it may be called by the lib (msal) itself
       expect(spy).toHaveBeenCalled();
     });
 
-    it("should call query when isAuthenticated, query.makeQueryOnInitialize are true and query contains endpoints", () => {
+    it("should call query when isAuthenticated, query.makeQueryOnInitialize are set to true and query contains endpoints", () => {
       config.auth.requireAuthOnInitialize = true;
       config.query = Object.assign(config.query, {
         makeQueryOnInitialize: true,
@@ -106,16 +128,24 @@ describe(MSAL.name, () => {
 
       new MSAL(config);
 
-      let parameters: { id: string; url: string } | null = null;
-      Object.entries(config.query?.endpoints || []).forEach(([id, url]) => {
-        parameters = { id, url };
-      });
+      // Makes sure the config endpoints contains once entry. Otherwise fail the test
+      if (
+        config.query?.endpoints &&
+        Object.entries(config.query.endpoints).length === 1
+      ) {
+        let parameters: { id: string; url: string } | null = null;
+        Object.entries(config.query?.endpoints).forEach(([id, url]) => {
+          parameters = { id, url };
+        });
 
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(parameters);
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith(parameters);
+      } else {
+        fail();
+      }
     });
 
-    it("should throw an error when isAuthenticated, query.makeQueryOnInitialize are true, but query contains no endpoints", () => {
+    it("should throw an error when isAuthenticated and makeQueryOnInitialize are set to true, but query contains no endpoint", () => {
       config.auth.requireAuthOnInitialize = true;
       config.query = Object.assign(config.query, {
         makeQueryOnInitialize: true,
@@ -124,10 +154,7 @@ describe(MSAL.name, () => {
 
       const spy = jest.spyOn(MSAL.prototype, "query");
 
-      expect(() => {
-        new MSAL(config);
-      }).toThrow();
-
+      expect(() => new MSAL(config)).toThrow();
       expect(spy).not.toHaveBeenCalled();
     });
   });
@@ -156,7 +183,7 @@ describe(MSAL.name, () => {
       const msal = new MSAL(config);
       msal.login();
 
-      expect(spy).toHaveBeenCalledTimes(0);
+      expect(spy).not.toHaveBeenCalled();
     });
   });
 
@@ -216,17 +243,181 @@ describe(MSAL.name, () => {
       const msal = new MSAL(config);
 
       expect(msal.isAuthenticated()).toEqual(false);
-      // Once on initialization, once with the call to isAuthenticated above
+      // Once during initialization, once with the call to isAuthenticated above
       expect(spy).toHaveBeenCalledTimes(2);
     });
 
-    it("should return true otherwise", () => {
-      const spy = jest.spyOn(defaultUserAgentApplicationMock, "isCallback");
-
+    it("should return true when the current location is not a callback and the current user's information are not empty", () => {
       const msal = new MSAL(config);
 
       expect(msal.isAuthenticated()).toEqual(true);
-      expect(spy).toHaveBeenCalledWith(window.location.hash);
+    });
+  });
+
+  describe("query", () => {
+    it("should query the endpoint and return the response", async () => {
+      const spyAcquireToken = jest.spyOn(
+        defaultUserAgentApplicationMock,
+        "acquireTokenSilent"
+      );
+      const spyAxios = jest.spyOn(axios, "request");
+
+      const msal = new MSAL(config);
+
+      const endpoint: Query = { url: "http://www.url.com" };
+
+      expect(await msal.query(endpoint)).toEqual(defaultAxiosResponse);
+      expect(spyAcquireToken).toHaveBeenCalledTimes(1);
+      expect(spyAxios).toHaveBeenCalledTimes(1);
+    });
+
+    it("should query the endpoint, return the response and store the result into data.query", async () => {
+      const spyAcquireToken = jest.spyOn(
+        defaultUserAgentApplicationMock,
+        "acquireTokenSilent"
+      );
+      const spyAxios = jest.spyOn(axios, "request");
+
+      const msal = new MSAL(config);
+
+      const endpoint: Query = { url: "http://www.url.com", id: "test" };
+
+      expect(await msal.query(endpoint)).toEqual(defaultAxiosResponse);
+      expect(msal.data.query.test).toEqual(defaultAxiosResponse.data);
+      expect(spyAcquireToken).toHaveBeenCalledTimes(1);
+      expect(spyAxios).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("executeQuery", () => {
+    it("should execute the query and return the response", async () => {
+      const spy = jest.spyOn(axios, "request");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const msal: any = new MSAL(config);
+
+      const endpoint: Query = { url: "http://www.url.com" };
+      // Mock the options added by executeQuery
+      const options: QueryOptions = {
+        headers: {
+          Authorization: "Bearer ", // The accessToken is empty which explains the space
+        },
+      };
+
+      expect(await msal.executeQuery(endpoint, options)).toEqual(
+        defaultAxiosResponse
+      );
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(msal.createQuery(endpoint, options));
+    });
+
+    it("should convert the endpoint path into an URL, execute the query and return the response", async () => {
+      const spy = jest.spyOn(axios, "request");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const msal: any = new MSAL(config);
+
+      const endpointPath = "/a/random/path";
+      const endpointURL = `${config.query?.baseUrl}${endpointPath}`;
+      // Mock the options added by executeQuery
+      const options: QueryOptions = {
+        headers: {
+          Authorization: "Bearer ", // The accessToken is empty which explains the space
+        },
+      };
+
+      expect(await msal.executeQuery(endpointPath, options)).toEqual(
+        defaultAxiosResponse
+      );
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(msal.createQuery(endpointURL, options));
+    });
+
+    it("should override the Authorization header, execute the query and return the response", async () => {
+      const spy = jest.spyOn(axios, "request");
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const msal: any = new MSAL(config);
+
+      const endpoint: Query = { url: "http://www.url.com" };
+      // Mock the options added by executeQuery
+      const options: QueryOptions = {
+        headers: {
+          Authorization: "Bearer ", // The accessToken is empty which explains the space
+        },
+      };
+      const invalidOptions: QueryOptions = {
+        headers: {
+          Authorization: "Bearer my-token",
+        },
+      };
+
+      expect(await msal.executeQuery(endpoint, invalidOptions)).toEqual(
+        defaultAxiosResponse
+      );
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(msal.createQuery(endpoint, options));
+    });
+
+    it("should throw an error when the request fails", async () => {
+      mocked(axios.request).mockRejectedValue(new Error());
+      const spy = jest.spyOn(axios, "request");
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const msal: any = new MSAL(config);
+
+      const endpoint: Query = { url: "http://www.url.com" };
+      const options: QueryOptions = {};
+
+      await expect(msal.executeQuery(endpoint, options)).rejects.toThrow();
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("createQuery", () => {
+    it("should return the query made of the enpoint URL and the options", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const msal: any = new MSAL(config);
+
+      const endpoint: Query = { url: "an.url.com" };
+      const options: QueryOptions = {
+        method: "GET",
+        responseType: "json",
+        data: {},
+        headers: {
+          "Content-Type": "json",
+        },
+      };
+
+      expect(msal.createQuery(endpoint, options)).toEqual({
+        ...options,
+        url: endpoint.url,
+      });
+    });
+
+    it("should transform the string enpoint into a Query", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const msal: any = new MSAL(config);
+
+      const endpoint = "an.url.com";
+      const endpointQuery: Query = { url: endpoint };
+      const options: QueryOptions = {};
+
+      // Either way should result to the same query
+      expect(msal.createQuery(endpoint, options)).toEqual(
+        msal.createQuery(endpointQuery, options)
+      );
+    });
+
+    it("should throw an error if the URL is empty", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const msal: any = new MSAL(config);
+
+      const endpoint = "";
+      const endpointQuery: Query = { url: endpoint };
+      const options: QueryOptions = {};
+
+      // Either way should throw an error
+      expect(() => msal.createQuery(endpoint, options)).toThrow();
+      expect(() => msal.createQuery(endpointQuery, options)).toThrow();
     });
   });
 
@@ -277,7 +468,7 @@ describe(MSAL.name, () => {
     it("should call acquireTokenRedirect if the request fails and interaction is required by the user", async () => {
       jest
         .spyOn(defaultUserAgentApplicationMock, "acquireTokenSilent")
-        .mockRejectedValueOnce(new AuthError(ErrorCode.ConsentRequired)); // Requires consent by the user
+        .mockRejectedValueOnce(new AuthError(ErrorCode.ConsentRequired));
 
       const spy = jest.spyOn(
         defaultUserAgentApplicationMock,

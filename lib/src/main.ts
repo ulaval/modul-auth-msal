@@ -199,7 +199,8 @@ export class MSAL implements MSALBasic {
   ): Query {
     if (typeof endpoint === "string") {
       endpoint = { url: endpoint };
-    } else if (endpoint.url === "") {
+    }
+    if (endpoint.url === "") {
       throw new Error("URL endpoint must not be empty");
     }
 
