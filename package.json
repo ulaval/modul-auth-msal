@@ -4,7 +4,12 @@
   "description": "Small Vuejs wrapper around Microsoft's OAuth lib (MSAL.js)",
   "main": "dist/plugin.js",
   "types": "dist/plugin.d.ts",
-  "private": true,
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/ulaval/modul-auth-msal.git"
@@ -12,6 +17,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "tsc",
+    "publish": "yarn build && yarn publish",
     "lint": "eslint --fix \"**/*.{js,ts}\" && prettier --write \"**/*.{js,ts,json,md}\"",
     "test": "jest"
   },
