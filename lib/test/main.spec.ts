@@ -24,8 +24,6 @@ const baseConfig: Config = {
     parameters: {
       scopes: ["user.read"],
     },
-    makeQueryOnInitialize: false,
-    endpoints: { profile: "/me" },
     baseUrl: "https://graph.microsoft.com/v1.0",
   },
 };
@@ -116,46 +114,6 @@ describe(MSAL.name, () => {
       // We just want to make sure it has been called at least once
       // since it may be called by the lib (msal) itself
       expect(spy).toHaveBeenCalled();
-    });
-
-    it("should call query when isAuthenticated, query.makeQueryOnInitialize are set to true and query contains endpoints", () => {
-      config.auth.requireAuthOnInitialize = true;
-      config.query = Object.assign(config.query, {
-        makeQueryOnInitialize: true,
-      });
-
-      const spy = jest.spyOn(MSAL.prototype, "query");
-
-      new MSAL(config);
-
-      // Makes sure the config endpoints contains once entry. Otherwise fail the test
-      if (
-        config.query?.endpoints &&
-        Object.entries(config.query.endpoints).length === 1
-      ) {
-        let parameters: { id: string; url: string } | null = null;
-        Object.entries(config.query?.endpoints).forEach(([id, url]) => {
-          parameters = { id, url };
-        });
-
-        expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy).toHaveBeenCalledWith(parameters);
-      } else {
-        fail();
-      }
-    });
-
-    it("should throw an error when isAuthenticated and makeQueryOnInitialize are set to true, but query contains no endpoint", () => {
-      config.auth.requireAuthOnInitialize = true;
-      config.query = Object.assign(config.query, {
-        makeQueryOnInitialize: true,
-        endpoints: {},
-      });
-
-      const spy = jest.spyOn(MSAL.prototype, "query");
-
-      expect(() => new MSAL(config)).toThrow();
-      expect(spy).not.toHaveBeenCalled();
     });
   });
 
