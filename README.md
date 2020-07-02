@@ -12,9 +12,9 @@ Small Vuejs wrapper around Microsoft's OAuth lib
 
 ## Editor
 
-[Visual Studio Code](https://code.visualstudio.com/) is the recommanded editor.
+[Visual Studio Code](https://code.visualstudio.com/) is the recommended editor.
 
-The following extensions are recommanded (see: `.vscode/extensions.json`):
+The following extensions are recommended (see: `.vscode/extensions.json`):
 
 - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) (Linting)
 - [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) (Code formatter)
@@ -40,6 +40,5 @@ Runs the linters using ESLint and Prettier.
 
 ## TODO
 
-- Fix typos
 - Add/improve examples
 - Add more unit tests

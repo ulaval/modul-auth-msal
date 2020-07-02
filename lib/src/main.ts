@@ -18,7 +18,7 @@ import {
 } from "./types";
 
 /**
- * Manage authentication and querying of Microsoft's onlice services
+ * Manage authentication and querying of Microsoft's online services
  */
 export class MSAL implements MSALBasic {
   private lib: UserAgentApplicationExtended;
@@ -112,7 +112,7 @@ export class MSAL implements MSALBasic {
 
   /**
    * Used to logout the current user, and redirect the user to the postLogoutRedirectUri.
-   * **Note: Default behaviour is to redirect the user to `window.location.href`.**
+   * **Note: Default behavior is to redirect the user to `window.location.href`.**
    */
   public logout(): void {
     if (this.isAuthenticated()) {
@@ -243,7 +243,7 @@ export class MSAL implements MSALBasic {
   }
 
   /**
-   * Check if a user interation is required based on an error code
+   * Check if a user interaction is required based on an error code
    * @param errorCode The error code returned by the Microsoft API
    */
   private requiresInteraction(errorCode: string): boolean {

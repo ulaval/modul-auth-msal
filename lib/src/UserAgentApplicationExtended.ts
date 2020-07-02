@@ -2,7 +2,7 @@ import { Configuration, UserAgentApplication } from "msal";
 import { AuthCache } from "msal/lib-commonjs/cache/AuthCache";
 
 /**
- * Extention of the UserAgentApplication.
+ * Extension of the UserAgentApplication.
  * Exposes the private property UserAgentApplication.cacheStorage through the public property store.
  */
 export class UserAgentApplicationExtended extends UserAgentApplication {
