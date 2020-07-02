@@ -14,19 +14,10 @@ Small Vuejs wrapper around Microsoft's OAuth lib
 
 [Visual Studio Code](https://code.visualstudio.com/) is the recommended editor.
 
-The following extensions are recommended (see: `.vscode/extensions.json`):
+The following extensions are **strongly** recommended (see: `.vscode/extensions.json`):
 
 - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) (Linting)
 - [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) (Code formatter)
-
-Once installed, configure prettier to run on save.
-Press `Cmd/Ctrl + Shift + p` and then type _"Preferences: Open Settings (JSON)"_.
-Once `settings.json` open, add these two lines:
-
-```json
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-```
 
 ## Supported commands
 
@@ -42,3 +33,4 @@ Runs the linters using ESLint and Prettier.
 
 - Add/improve examples
 - Add more unit tests
+- Add CI to deploy on npm registry
