@@ -1,19 +1,19 @@
 jest.mock("msal");
 jest.mock("axios");
 
-import { UserAgentApplication, AuthenticationParameters } from "msal";
 import axios from "axios";
-import { MSAL } from "../src/main";
+import { cloneDeep } from "lodash";
+import { AuthenticationParameters, UserAgentApplication } from "msal";
+import { mocked } from "ts-jest/dist/util/testing";
 import { Config } from "../plugin";
+import { MSAL } from "../src/main";
 import {
   AuthResponse,
   ErrorCode,
-  QueryOptions,
   Query,
+  QueryOptions,
   QueryResponse,
 } from "../src/types";
-import { cloneDeep } from "lodash";
-import { mocked } from "ts-jest/dist/util/testing";
 
 const baseConfig: Config = {
   auth: {
@@ -373,7 +373,7 @@ describe(MSAL.name, () => {
   });
 
   describe("createQuery", () => {
-    it("should return the query made of the enpoint URL and the options", () => {
+    it("should return the query made of the endpoint URL and the options", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const msal: any = new MSAL(config);
 
@@ -393,7 +393,7 @@ describe(MSAL.name, () => {
       });
     });
 
-    it("should transform the string enpoint into a Query", () => {
+    it("should transform the string endpoint into a Query", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const msal: any = new MSAL(config);
 
