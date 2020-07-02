@@ -60,6 +60,8 @@ export class MSAL implements MSALBasic {
     this.cacheConfig = Object.assign(this.cacheConfig, config.cache);
     this.queryConfig = Object.assign(this.queryConfig, config.query);
 
+    // TODO: Update authority once ADFS is supported by MSAL
+    // Since ULaval's auth page only supports ADFS
     this.lib = new UserAgentApplicationExtended({
       auth: {
         clientId: this.authConfig.clientId,
