@@ -1,21 +1,21 @@
-import { cloneDeep, isEmpty } from "lodash";
 import axios from "axios";
-import { UserAgentApplicationExtended } from "./UserAgentApplicationExtended";
+import { cloneDeep, isEmpty } from "lodash";
 import {
   AuthConfig,
+  AuthError,
   CacheConfig,
-  QueryConfig,
   Config,
   DataObject,
+  ErrorCode,
   MSALBasic,
   Query,
+  QueryConfig,
   QueryEndpoint,
-  QueryResponse,
   QueryOptions,
-  ErrorCode,
-  AuthError,
   QueryParameters,
+  QueryResponse,
 } from "./types";
+import { UserAgentApplicationExtended } from "./UserAgentApplicationExtended";
 
 /**
  * Manage authentication and querying of Microsoft's online services
@@ -42,8 +42,6 @@ export class MSAL implements MSALBasic {
     parameters: {
       scopes: ["user.read"],
     },
-    makeQueryOnInitialize: false,
-    endpoints: { profile: "/me" },
     baseUrl: "https://graph.microsoft.com/v1.0",
   };
   private accessToken = "";
@@ -82,22 +80,6 @@ export class MSAL implements MSALBasic {
     this.data.isAuthenticated = this.isAuthenticated();
     if (this.data.isAuthenticated) {
       this.data.user = this.lib.getAccount();
-
-      if (this.queryConfig.makeQueryOnInitialize) {
-        if (
-          isEmpty(this.queryConfig.endpoints) ||
-          this.queryConfig.endpoints === undefined
-        ) {
-          throw new Error(
-            "Query endpoints must not be empty when makeQueryOnInitialize is set to true"
-          );
-        }
-
-        Object.entries(this.queryConfig.endpoints).forEach(([id, url]) => {
-          // Note: We do not wait for this query to complete
-          this.query({ id, url });
-        });
-      }
     }
   }
 

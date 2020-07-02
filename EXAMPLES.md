@@ -11,12 +11,6 @@ const msalConfig: Config = {
     redirectUri: "localhost:8080",
     requireAuthOnInitialize: true,
   },
-  query: {
-    parameters: {
-      scopes: ["user.read"],
-    },
-    makeQueryOnInitialize: true, // Appel de la requête définie plus haut après l'initialisation du plugin
-  },
 };
 
 Vue.use(msal, msalConfig);
