@@ -1,11 +1,11 @@
+import { AxiosRequestConfig, AxiosResponse, Method, ResponseType } from "axios";
 import {
   Account,
+  AuthenticationParameters,
   AuthError,
   AuthResponse,
-  AuthenticationParameters,
 } from "msal";
 import conf from "msal/lib-commonjs/Configuration";
-import { AxiosRequestConfig, AxiosResponse, Method, ResponseType } from "axios";
 
 export { AuthError, AuthResponse };
 
@@ -42,9 +42,7 @@ export type CacheConfig = conf.CacheOptions;
 export type SystemConfig = conf.SystemOptions;
 export type QueryConfig = {
   parameters: QueryParameters;
-  makeQueryOnInitialize?: boolean;
   baseUrl?: string;
-  endpoints?: Endpoints;
 };
 export type Config = {
   auth: AuthConfig;

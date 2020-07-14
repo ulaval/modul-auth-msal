@@ -1,24 +1,24 @@
-import { cloneDeep, isEmpty } from "lodash";
 import axios from "axios";
-import { UserAgentApplicationExtended } from "./UserAgentApplicationExtended";
+import { cloneDeep, isEmpty } from "lodash";
 import {
   AuthConfig,
+  AuthError,
   CacheConfig,
-  QueryConfig,
   Config,
   DataObject,
+  ErrorCode,
   MSALBasic,
   Query,
+  QueryConfig,
   QueryEndpoint,
-  QueryResponse,
   QueryOptions,
-  ErrorCode,
-  AuthError,
   QueryParameters,
+  QueryResponse,
 } from "./types";
+import { UserAgentApplicationExtended } from "./UserAgentApplicationExtended";
 
 /**
- * Manage authentication and querying of Microsoft's onlice services
+ * Manage authentication and querying of Microsoft's online services
  */
 export class MSAL implements MSALBasic {
   private lib: UserAgentApplicationExtended;
@@ -42,8 +42,6 @@ export class MSAL implements MSALBasic {
     parameters: {
       scopes: ["user.read"],
     },
-    makeQueryOnInitialize: false,
-    endpoints: { profile: "/me" },
     baseUrl: "https://graph.microsoft.com/v1.0",
   };
   private accessToken = "";
@@ -62,6 +60,8 @@ export class MSAL implements MSALBasic {
     this.cacheConfig = Object.assign(this.cacheConfig, config.cache);
     this.queryConfig = Object.assign(this.queryConfig, config.query);
 
+    // TODO: Update authority once ADFS is supported by MSAL
+    // Since ULaval's auth page only supports ADFS
     this.lib = new UserAgentApplicationExtended({
       auth: {
         clientId: this.authConfig.clientId,
@@ -82,22 +82,6 @@ export class MSAL implements MSALBasic {
     this.data.isAuthenticated = this.isAuthenticated();
     if (this.data.isAuthenticated) {
       this.data.user = this.lib.getAccount();
-
-      if (this.queryConfig.makeQueryOnInitialize) {
-        if (
-          isEmpty(this.queryConfig.endpoints) ||
-          this.queryConfig.endpoints === undefined
-        ) {
-          throw new Error(
-            "Query endpoints must not be empty when makeQueryOnInitialize is set to true"
-          );
-        }
-
-        Object.entries(this.queryConfig.endpoints).forEach(([id, url]) => {
-          // Note: We do not wait for this query to complete
-          this.query({ id, url });
-        });
-      }
     }
   }
 
@@ -112,7 +96,7 @@ export class MSAL implements MSALBasic {
 
   /**
    * Used to logout the current user, and redirect the user to the postLogoutRedirectUri.
-   * **Note: Default behaviour is to redirect the user to `window.location.href`.**
+   * **Note: Default behavior is to redirect the user to `window.location.href`.**
    */
   public logout(): void {
     if (this.isAuthenticated()) {
@@ -243,7 +227,7 @@ export class MSAL implements MSALBasic {
   }
 
   /**
-   * Check if a user interation is required based on an error code
+   * Check if a user interaction is required based on an error code
    * @param errorCode The error code returned by the Microsoft API
    */
   private requiresInteraction(errorCode: string): boolean {
