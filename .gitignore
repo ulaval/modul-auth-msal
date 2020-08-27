@@ -17,3 +17,6 @@ dist
 # Yarn
 yarn-error.log
 yarn-cache
+
+# Test coverage
+coverage/*
