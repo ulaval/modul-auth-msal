@@ -1,5 +1,6 @@
 import axios from "axios";
 import { cloneDeep, isEmpty } from "lodash";
+import { ILogger } from "./interfaces";
 import {
   AuthConfig,
   AuthError,
@@ -22,6 +23,7 @@ import { UserAgentApplicationExtended } from "./UserAgentApplicationExtended";
  */
 export class MSAL implements MSALBasic {
   private lib: UserAgentApplicationExtended;
+  private logger: ILogger;
   private tokenExpirationTimer?: number;
   private readonly authConfig: AuthConfig = {
     clientId: "",
@@ -59,6 +61,16 @@ export class MSAL implements MSALBasic {
     this.authConfig = Object.assign(this.authConfig, config.auth);
     this.cacheConfig = Object.assign(this.cacheConfig, config.cache);
     this.queryConfig = Object.assign(this.queryConfig, config.query);
+
+    this.logger = config.logger || {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      info: (): void => {},
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      debug: (): void => {},
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      error: (): void => {},
+      logLevel: "info",
+    };
 
     // TODO: Update authority once ADFS is supported by MSAL
     // Since ULaval's auth page only supports ADFS
@@ -169,7 +181,12 @@ export class MSAL implements MSALBasic {
       Authorization: `Bearer ${this.accessToken}`,
     };
 
-    return await axios.request<Response>(query);
+    return await axios.request<Response>(query).catch((err) => {
+      this.logger.error(err);
+
+      // Re-throw the error so it can be handled where it was called
+      throw err;
+    });
   }
 
   /**
@@ -216,6 +233,8 @@ export class MSAL implements MSALBasic {
 
       return this.accessToken;
     } catch (error) {
+      this.logger.error(error);
+
       // Upon acquireTokenSilent failure (due to consent, interaction or login required ONLY).
       // Call acquireTokenRedirect
       if (this.requiresInteraction((error as AuthError).errorCode)) {

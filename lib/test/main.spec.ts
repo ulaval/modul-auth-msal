@@ -6,6 +6,7 @@ import { cloneDeep } from "lodash";
 import { AuthenticationParameters, UserAgentApplication } from "msal";
 import { mocked } from "ts-jest/dist/util/testing";
 import { Config } from "../plugin";
+import { ILogger } from "../src/interfaces";
 import { MSAL } from "../src/main";
 import {
   AuthResponse,
@@ -14,6 +15,16 @@ import {
   QueryOptions,
   QueryResponse,
 } from "../src/types";
+
+const logger: ILogger = {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  info: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  debug: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  error: () => {},
+  logLevel: "info",
+};
 
 const baseConfig: Config = {
   auth: {
@@ -26,6 +37,7 @@ const baseConfig: Config = {
     },
     baseUrl: "https://graph.microsoft.com/v1.0",
   },
+  logger,
 };
 // Allows to edit the config object since its a clone of baseConfig and is reset before each test
 let config = cloneDeep(baseConfig);
@@ -142,6 +154,14 @@ describe(MSAL.name, () => {
       msal.login();
 
       expect(spy).not.toHaveBeenCalled();
+    });
+
+    it("should throw an error if the clientId is not set", () => {
+      const invalidConfig = Object.assign({}, config);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (invalidConfig.auth.clientId as any) = null;
+
+      expect(() => new MSAL(invalidConfig)).toThrowError();
     });
   });
 
@@ -328,6 +348,22 @@ describe(MSAL.name, () => {
       await expect(msal.executeQuery(endpoint, options)).rejects.toThrow();
       expect(spy).toHaveBeenCalledTimes(1);
     });
+
+    it("should call the logger when the request fails", async () => {
+      if (config.logger !== undefined) {
+        mocked(axios.request).mockRejectedValue(new Error());
+        const spy = jest.spyOn(config.logger, "error");
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const msal: any = new MSAL(config);
+
+        const endpoint: Query = { url: "http://www.url.com" };
+        const options: QueryOptions = {};
+
+        await expect(msal.executeQuery(endpoint, options)).rejects.toThrow();
+        expect(spy).toHaveBeenCalledTimes(1);
+      }
+    });
   });
 
   describe("createQuery", () => {
@@ -497,4 +533,6 @@ describe(MSAL.name, () => {
       expect((msal as any).tokenExpirationTimer).not.toBeUndefined();
     });
   });
+
+  // TODO: Test token expiration
 });

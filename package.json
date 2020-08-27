@@ -1,6 +1,6 @@
 {
   "name": "ulaval-modul-auth-msal",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Small Vuejs wrapper around Microsoft's OAuth lib (MSAL.js)",
   "main": "dist/plugin.js",
   "types": "dist/plugin.d.ts",
@@ -22,28 +22,28 @@
     "test": "jest"
   },
   "dependencies": {
-    "axios": "^0.19.2",
-    "lodash": "^4.17.15",
-    "msal": "^1.3.2"
+    "axios": "^0.20.0",
+    "lodash": "^4.17.20",
+    "msal": "^1.4.0"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.3",
-    "@types/lodash": "^4.14.157",
-    "@typescript-eslint/eslint-plugin": "^3.5.0",
-    "@typescript-eslint/parser": "^3.5.0",
-    "eslint": "^7.3.1",
+    "@types/jest": "^26.0.10",
+    "@types/lodash": "^4.14.160",
+    "@typescript-eslint/eslint-plugin": "^3.10.1",
+    "@typescript-eslint/parser": "^3.10.1",
+    "eslint": "^7.7.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-prettier": "^3.1.4",
-    "jest": "^26.1.0",
-    "lint-staged": "^10.2.11",
-    "prettier": "^2.0.5",
-    "ts-jest": "^26.1.1",
-    "typescript": "~3.9.6",
-    "vue": "^2.6.11",
+    "jest": "^26.4.2",
+    "lint-staged": "^10.2.13",
+    "prettier": "^2.1.1",
+    "ts-jest": "^26.3.0",
+    "typescript": "~4.0.2",
+    "vue": "^2.6.12",
     "yorkie": "^2.0.0"
   },
   "peerDependencies": {
-    "vue": "^2.6.11"
+    "vue": "^2.6.12"
   },
   "gitHooks": {
     "pre-commit": "lint-staged"
