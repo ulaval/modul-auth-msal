@@ -1,6 +1,6 @@
 {
   "name": "ulaval-modul-auth-msal",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Small Vuejs wrapper around Microsoft's OAuth lib (MSAL.js)",
   "main": "dist/plugin.js",
   "types": "dist/plugin.d.ts",
@@ -17,7 +17,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "tsc",
-    "publish": "yarn build && yarn publish",
+    "prepublish": "tsc",
     "lint": "eslint --fix \"**/*.{js,ts}\" && prettier --write \"**/*.{js,ts,json,md}\"",
     "test": "jest"
   },
@@ -40,10 +40,12 @@
     "ts-jest": "^26.3.0",
     "typescript": "~4.0.2",
     "vue": "^2.6.12",
+    "winston": "^3.3.3",
     "yorkie": "^2.0.0"
   },
   "peerDependencies": {
-    "vue": "^2.6.12"
+    "vue": "^2.6.12",
+    "winston": "^3.3.3"
   },
   "gitHooks": {
     "pre-commit": "lint-staged"
