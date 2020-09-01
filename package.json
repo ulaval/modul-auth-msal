@@ -1,6 +1,6 @@
 {
   "name": "ulaval-modul-auth-msal",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "Small Vuejs wrapper around Microsoft's OAuth lib (MSAL.js)",
   "main": "dist/plugin.js",
   "types": "dist/plugin.d.ts",
