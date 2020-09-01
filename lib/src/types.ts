@@ -6,11 +6,9 @@ import {
   AuthResponse,
 } from "msal";
 import conf from "msal/lib-commonjs/Configuration";
-import { ILogger } from "./interfaces";
+import winston from "winston";
 
 export { AuthError, AuthResponse };
-
-export type LogLevel = "info" | "debug" | "warn";
 
 export type Query = AxiosRequestConfig & {
   url: string;
@@ -52,7 +50,7 @@ export type Config = {
   query?: QueryConfig;
   cache?: CacheConfig;
   system?: SystemConfig;
-  logger?: ILogger;
+  logger?: winston.Logger;
 };
 
 export type UserData = Account;

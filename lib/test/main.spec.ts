@@ -5,8 +5,8 @@ import axios from "axios";
 import { cloneDeep } from "lodash";
 import { AuthenticationParameters, UserAgentApplication } from "msal";
 import { mocked } from "ts-jest/dist/util/testing";
+import winston from "winston";
 import { Config } from "../plugin";
-import { ILogger } from "../src/interfaces";
 import { MSAL } from "../src/main";
 import {
   AuthResponse,
@@ -16,15 +16,10 @@ import {
   QueryResponse,
 } from "../src/types";
 
-const logger: ILogger = {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  info: () => {},
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  debug: () => {},
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  error: () => {},
-  logLevel: "info",
-};
+const logger = (): winston.Logger =>
+  winston.createLogger({
+    silent: true,
+  });
 
 const baseConfig: Config = {
   auth: {
@@ -37,7 +32,6 @@ const baseConfig: Config = {
     },
     baseUrl: "https://graph.microsoft.com/v1.0",
   },
-  logger,
 };
 // Allows to edit the config object since its a clone of baseConfig and is reset before each test
 let config = cloneDeep(baseConfig);
@@ -96,6 +90,7 @@ beforeEach(() => {
 
   // Reset the MSAL config object with the baseConfig
   config = cloneDeep(baseConfig);
+  config.logger = logger();
 });
 
 describe(MSAL.name, () => {
@@ -352,7 +347,7 @@ describe(MSAL.name, () => {
     it("should call the logger when the request fails", async () => {
       if (config.logger !== undefined) {
         mocked(axios.request).mockRejectedValue(new Error());
-        const spy = jest.spyOn(config.logger, "error");
+        const spy = jest.spyOn(config.logger, "log");
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const msal: any = new MSAL(config);
