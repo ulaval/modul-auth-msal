@@ -1392,7 +1392,7 @@ cross-spawn@^6.0.0:
     shebang-command "^1.2.0"
     which "^1.2.9"
 
-cross-spawn@^7.0.0, cross-spawn@^7.0.2:
+cross-spawn@^7.0.2:
   version "7.0.2"
   resolved "https://registry.yarnpkg.com/cross-spawn/-/cross-spawn-7.0.2.tgz#d0d7dcfa74e89115c7619f4f721a94e1fdb716d6"
   integrity sha512-PD6G8QG3S4FK/XCGFbEQrDqO2AnMMsy0meR7lerlIOHAAbkuavGU/pOqprrlvfTNjvowivTeBsjebAL0NSoMxw==
@@ -1768,22 +1768,7 @@ execa@^1.0.0:
     signal-exit "^3.0.0"
     strip-eof "^1.0.0"
 
-execa@^4.0.0:
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/execa/-/execa-4.0.2.tgz#ad87fb7b2d9d564f70d2b62d511bee41d5cbb240"
-  integrity sha512-QI2zLa6CjGWdiQsmSkZoGtDx2N+cQIGb3yNolGTdjSQzydzLgYYf8LRuagp7S7fPimjcrzUDSUFd/MgzELMi4Q==
-  dependencies:
-    cross-spawn "^7.0.0"
-    get-stream "^5.0.0"
-    human-signals "^1.1.1"
-    is-stream "^2.0.0"
-    merge-stream "^2.0.0"
-    npm-run-path "^4.0.0"
-    onetime "^5.1.0"
-    signal-exit "^3.0.2"
-    strip-final-newline "^2.0.0"
-
-execa@^4.0.3:
+execa@^4.0.0, execa@^4.0.3:
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/execa/-/execa-4.0.3.tgz#0a34dabbad6d66100bd6f2c576c8669403f317f2"
   integrity sha512-WFDXGHckXPWZX19t1kCsXzOpqX9LWYNqn4C+HqZlk/V0imTkzJZqf87ZBhvpHaftERYknpk0fjSylnXVlVgI0A==
@@ -2059,13 +2044,6 @@ get-stream@^4.0.0:
   dependencies:
     pump "^3.0.0"
 
-get-stream@^5.0.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/get-stream/-/get-stream-5.1.0.tgz#01203cdc92597f9b909067c3e656cc1f4d3c4dc9"
-  integrity sha512-EXr1FOzrzTfGeL0gQdeFEvOMm2mzMOglyiOXSTpPC+iAjAKftbr3jpCMWynogwYnM+eSj9sHGc6wjIcDvYiygw==
-  dependencies:
-    pump "^3.0.0"
-
 get-value@^2.0.3, get-value@^2.0.6:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/get-value/-/get-value-2.0.6.tgz#dc15ca1c672387ca76bd37ac0a395ba2042a2c28"
@@ -2210,11 +2188,6 @@ http-signature@~1.2.0:
     assert-plus "^1.0.0"
     jsprim "^1.2.2"
     sshpk "^1.7.0"
-
-human-signals@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/human-signals/-/human-signals-1.1.1.tgz#c5b1cd14f50aeae09ab6c59fe63ba3395fe4dfa3"
-  integrity sha512-SEQu7vl8KjNL2eoGBLF3+wAjpsNfA9XMlXAYj/3EdaNfAlxKthD1xjEQfGOUhllCGGJVNY34bRr6lPINhNjyZw==
 
 iconv-lite@0.4.24:
   version "0.4.24"
@@ -3079,9 +3052,9 @@ lines-and-columns@^1.1.6:
   integrity sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
 
 lint-staged@^10.2.13:
-  version "10.2.13"
-  resolved "https://registry.yarnpkg.com/lint-staged/-/lint-staged-10.2.13.tgz#b9c504683470edfc464b7d3fe3845a5a1efcd814"
-  integrity sha512-conwlukNV6aL9SiMWjFtDp5exeDnTMekdNPDZsKGnpfQuHcO0E3L3Bbf58lcR+M7vk6LpCilxDAVks/DDVBYlA==
+  version "10.3.0"
+  resolved "https://registry.yarnpkg.com/lint-staged/-/lint-staged-10.3.0.tgz#388c3d440590c45c339e7163f669ea69ae90b1e0"
+  integrity sha512-an3VgjHqmJk0TORB/sdQl0CTkRg4E5ybYCXTTCSJ5h9jFwZbcgKIx5oVma5e7wp/uKt17s1QYFmYqT9MGVosGw==
   dependencies:
     chalk "^4.1.0"
     cli-truncate "^2.1.0"
@@ -3388,13 +3361,6 @@ npm-run-path@^2.0.0:
   dependencies:
     path-key "^2.0.0"
 
-npm-run-path@^4.0.0:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/npm-run-path/-/npm-run-path-4.0.1.tgz#b7ecd1e5ed53da8e37a55e1c2269e0b97ed748ea"
-  integrity sha512-S48WzZW777zhNIrn7gxOlISNAqi9ZC/uQFnRdbeIHhZhCA6UqpkOT8T1G7BvfdgP4Er8gF4sUbaS0i7QvIfCWw==
-  dependencies:
-    path-key "^3.0.0"
-
 nwsapi@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/nwsapi/-/nwsapi-2.2.0.tgz#204879a9e3d068ff2a55139c2c772780681a38b7"
@@ -3551,7 +3517,7 @@ path-key@^2.0.0, path-key@^2.0.1:
   resolved "https://registry.yarnpkg.com/path-key/-/path-key-2.0.1.tgz#411cadb574c5a140d3a4b1910d40d80cc9f40b40"
   integrity sha1-QRyttXTFoUDTpLGRDUDYDMn0C0A=
 
-path-key@^3.0.0, path-key@^3.1.0:
+path-key@^3.1.0:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/path-key/-/path-key-3.1.1.tgz#581f6ade658cbba65a0d3380de7753295054f375"
   integrity sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==
@@ -4275,11 +4241,6 @@ strip-eof@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/strip-eof/-/strip-eof-1.0.0.tgz#bb43ff5598a6eb05d89b59fcd129c983313606bf"
   integrity sha1-u0P/VZim6wXYm1n80SnJgzE2Br8=
-
-strip-final-newline@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/strip-final-newline/-/strip-final-newline-2.0.0.tgz#89b852fb2fcbe936f6f4b3187afb0a12c1ab58ad"
-  integrity sha512-BrpvfNAE3dcvq7ll3xVumzjKjZQ5tI1sEUIKr3Uoks0XUl45St3FlatVqef9prk4jRDzhW6WZg+3bk93y6pLjA==
 
 strip-indent@^2.0.0:
   version "2.0.0"
