@@ -3269,9 +3269,9 @@ ms@^2.1.1:
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
 
 msal@^1.4.0:
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/msal/-/msal-1.4.2.tgz#38d074c2151415d9215dff2635704ee60fbc3c45"
-  integrity sha512-zoKU3NbYSCrm+rz+Dgvh24ZZ7mvFjzsdRMJW8IPcuD7EbrKrF0HlKy+Pi0Kvnuz1yWXNWVheTY4YGu66CpO80g==
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/msal/-/msal-1.4.3.tgz#1cf33d69e0c7074d33e4c516a2558d9b367d36ba"
+  integrity sha512-C90MhgzcBuTSR2BOQ/LQryY1CZVESQLJDdmRDWSsaVde+zwZ2iXD0fWw7zeBd5TzfUCiJEXZVs4lFJ8d/IGbiQ==
   dependencies:
     tslib "^1.9.3"
 
